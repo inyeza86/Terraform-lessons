@@ -2,10 +2,21 @@ resource "aws_s3_bucket" "my_bucket" {
   bucket = "${var.project-name}-bucket-${random_string.bucket_suffix.result}"
 
   tags = {
-    Name        = "My bucket"
-    Environment = "Dev"
+    Name        = local.common_tags.Name
+    Environment = local.common_tags.Environment
+    Project     = local.common_tags.Project
   }
 }
+
+locals {
+  common_tags = {
+    Name        = "My bucket"
+    Project     = var.project-name
+    Environment = var.environment
+  }
+}
+
+
 
 resource "aws_s3_bucket_versioning" "my_bucket_versioning" {
   bucket = aws_s3_bucket.my_bucket.id

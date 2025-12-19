@@ -10,3 +10,9 @@ variable "project-name" {
   default     = "test-project"
 
 }
+
+variable "environment" {
+  description = "The environment type (e.g., dev, staging, prod)"
+  type        = string
+  default     = "dev"
+}
