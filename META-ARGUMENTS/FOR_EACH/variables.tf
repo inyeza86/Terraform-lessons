@@ -13,6 +13,7 @@ variable "instance_type" {
 }
 
 # name prefix variable
+
 variable "server_names" {
   type = list(string)
 
