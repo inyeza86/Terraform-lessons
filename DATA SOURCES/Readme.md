@@ -31,6 +31,7 @@ Terraform **data sources** allow you to **read existing infrastructure** without
 data "<PROVIDER>_<TYPE>" "<NAME>" {
   # lookup arguments
 }
+```
 
 # Example usage
 data.<PROVIDER>_<TYPE>.<NAME>.<ATTRIBUTE>
@@ -88,9 +89,98 @@ data "aws_subnets" "private" {
   }
 }
 ```
+### Security Group
+```
+data "aws_security_group" "ssh" {
+  name   = "allow-ssh"
+  vpc_id = data.aws_vpc.prod.id
+}
+```
+---
+### Availability Zones
+---
+```
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+```
+---
+### IAM Role
+---
+```
+data "aws_iam_role" "app_role" {
+  name = "my-app-role"
+}
+```
+---
+### S3 Bucket
+---
+```
+data "aws_s3_bucket" "my_bucket" {
+  bucket = "my-existing-bucket"
+}
+```
+---
+### Caller Identity
+---
+```
+data "aws_caller_identity" "current" {}
+```
 
 ## Using Data Sources Inside Modules
+## Pattern A — Data Sources Inside the Module
+```
+data "aws_vpc" "this" {
+  filter {
+    name   = "tag:Name"
+    values = [var.vpc_name]
+  }
+}
 
+resource "aws_instance" "this" {
+  ami           = var.ami_id
+  instance_type = var.instance_type
+  subnet_id     = data.aws_subnets.this.ids[0]
+}
+```
+## Pattern B — Data Sources Outside the Module (Recommended for Prod)
+# Root Module
+```
+data "aws_vpc" "prod" {
+  filter {
+    name   = "tag:Environment"
+    values = ["prod"]
+  }
+}
+
+data "aws_subnets" "private" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.prod.id]
+  }
+}
+```
+# Pass IDs into Module
+```
+module "ec2" {
+  source    = "./modules/ec2"
+  subnet_id = data.aws_subnets.private.ids[0]
+  vpc_id    = data.aws_vpc.prod.id
+}
+```
+# Module
+```
+variable "subnet_id" {}
+variable "vpc_id" {}
+
+resource "aws_instance" "this" {
+  subnet_id = var.subnet_id
+}
+```
+# Recommendation
+Always pass IDs to modules for **prod enviroments**
+
+## Summary
 When using data sources within modules: 
 - Pass necessary identifiers as **input variables**
 - Use data sources to **dynamically fetch resource attributes**
@@ -98,6 +188,17 @@ When using data sources within modules:
 ---
 ## Best Practices for Production
 1. **Version Control**: Pin provider versions in `required_providers` block.
+```
+terraform {
+  required_version = "~> 1.6"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+  }
+}
+```
 2. **Modular Design**: Encapsulate data source logic within reusable modules.
 3. **Input Validation**: Use variable validation to ensure correct input types.
 4. **Outputs**: Expose necessary attributes via module outputs.
