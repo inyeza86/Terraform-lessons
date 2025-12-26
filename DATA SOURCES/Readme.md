@@ -215,3 +215,21 @@ data "aws_vpc" "prod" {
 3. **Input Validation**: Use variable validation to ensure correct input types.
 
 4. **Outputs**: Expose necessary attributes via module outputs.
+
+## Recommended Repository Structure
+```
+envs/
+ ├── prod/
+ │   ├── main.tf        # Data sources here
+ │   ├── providers.tf
+ │   └── backend.tf
+modules/
+ ├── ec2/
+ ├── rds/
+ └── alb/
+```
+
+## References
+- [Terraform AWS Provider Documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+- [Terraform Data Sources](https://developer.hashicorp.com/terraform/language/data-sources)
+- [Terraform Module Best Practices](https://developer.hashicorp.com/terraform/module/best-practices)
