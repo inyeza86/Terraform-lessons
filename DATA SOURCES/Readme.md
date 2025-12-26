@@ -65,7 +65,7 @@ resource "aws_instance" "web_server" {
   instance_type = "t2.micro"
 }
 ```
----
+
 ### VPC
 ```
 data "aws_vpc" "prod" {
@@ -96,38 +96,36 @@ data "aws_security_group" "ssh" {
   vpc_id = data.aws_vpc.prod.id
 }
 ```
----
+
 ### Availability Zones
----
 ```
 data "aws_availability_zones" "available" {
   state = "available"
 }
 ```
----
+
 ### IAM Role
----
+
 ```
 data "aws_iam_role" "app_role" {
   name = "my-app-role"
 }
 ```
----
+
 ### S3 Bucket
----
+
 ```
 data "aws_s3_bucket" "my_bucket" {
   bucket = "my-existing-bucket"
 }
 ```
----
 ### Caller Identity
----
 ```
 data "aws_caller_identity" "current" {}
 ```
+---
 
-## Using Data Sources Inside Modules
+# Using Data Sources Inside Modules
 ## Pattern A — Data Sources Inside the Module
 ```
 data "aws_vpc" "this" {
@@ -144,7 +142,7 @@ resource "aws_instance" "this" {
 }
 ```
 ## Pattern B — Data Sources Outside the Module (Recommended for Prod)
-# Root Module
+## Root Module
 ```
 data "aws_vpc" "prod" {
   filter {
@@ -160,7 +158,7 @@ data "aws_subnets" "private" {
   }
 }
 ```
-# Pass IDs into Module
+## Pass IDs into Module
 ```
 module "ec2" {
   source    = "./modules/ec2"
@@ -168,7 +166,7 @@ module "ec2" {
   vpc_id    = data.aws_vpc.prod.id
 }
 ```
-# Module
+## Module
 ```
 variable "subnet_id" {}
 variable "vpc_id" {}
@@ -177,7 +175,7 @@ resource "aws_instance" "this" {
   subnet_id = var.subnet_id
 }
 ```
-# Recommendation
+## Recommendation
 Always pass IDs to modules for **prod enviroments**
 
 ## Summary
@@ -199,8 +197,21 @@ terraform {
   }
 }
 ```
-2. **Modular Design**: Encapsulate data source logic within reusable modules.
+2. **Avoid "magic" lookups**
+```
+# Bad
+data "aws_vpc" "default" { default = true }
+
+# Good
+data "aws_vpc" "prod" {
+  filter {
+    name   = "tag:Environment"
+    values = ["prod"]
+  }
+}
+```
+3. **Never hardcode IDs**: use data sources or remote state.
+3. **Modular Design**: Encapsulate data source logic within reusable modules.
 3. **Input Validation**: Use variable validation to ensure correct input types.
+
 4. **Outputs**: Expose necessary attributes via module outputs.
-5. **Documentation**: Document data sources and their purpose in module READMEs.
----
